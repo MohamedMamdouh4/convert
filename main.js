@@ -6,12 +6,12 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const OpenAI = require('openai');
+const cors = require('cors');
 
 dotenv.config();
 
 const app = express();
 //  enable CORS for all origins
-const cors = require('cors')
 app.use(cors());
 const port = 3000;
 
