@@ -1,0 +1,23 @@
+{
+  "name": "convert-to-audio",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "run:div": "nodemon main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@freeconvert/freeconvert-node": "^0.1.23",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.4",
+    "openai": "^4.53.2"
+  }
+}
