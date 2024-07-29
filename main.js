@@ -10,6 +10,9 @@ const OpenAI = require('openai');
 dotenv.config();
 
 const app = express();
+//  enable CORS for all origins
+const cors = require('cors')
+app.use(cors());
 const port = 3000;
 
 const storage = multer.memoryStorage();
