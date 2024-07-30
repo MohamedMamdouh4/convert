@@ -12,6 +12,10 @@ dotenv.config();
 const app = express();
 const port = 6000;
 
+//  enable CORS for all origins
+const cors = require('cors')
+app.use(cors());
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).single('file');  // Ensure the field name is 'file' lazem file m4 ay 7aga tanya
 
