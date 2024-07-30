@@ -6,14 +6,11 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const OpenAI = require('openai');
-const cors = require('cors');
 
 dotenv.config();
 
 const app = express();
-//  enable CORS for all origins
-app.use(cors());
-const port = 3000;
+const port = 6000;
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).single('file');  // Ensure the field name is 'file' lazem file m4 ay 7aga tanya
@@ -33,7 +30,7 @@ app.post('/upload', upload, (req, res) => {
     return res.status(400).send('No file uploaded.');
   }
 
-  const segmentDuration = 10; // Segment duration in seconds lazem belswanay 
+  const segmentDuration = 30; // Segment duration in seconds lazem belswanay 
   const totalSegments = Math.ceil(videoDuration / segmentDuration);
 
   const promises = [];
@@ -43,33 +40,34 @@ app.post('/upload', upload, (req, res) => {
     const cutStart = i * segmentDuration;
     const cutEnd = Math.min((i + 1) * segmentDuration, videoDuration);
 
+    const cutStartFormatted = formatTime(cutStart);
+    const cutEndFormatted = formatTime(cutEnd);
+
     const inputBody = {
-      "tasks": {
-        "import-1": {
-          "operation": "import/upload"
-        },
-        "convert-1": {
-          "operation": "convert",
-          "input": "import-1",
-          "input_format": "mp4",
-          "output_format": "mp3",
-          "options": {
-            "video_audio_remove": false,
-            "cut_start": `00:00:${cutStart.toString().padStart(2, '0')}`,
-            "cut_end": `00:00:${cutEnd.toString().padStart(2, '0')}`
-          }
-        },
-        "export-1": {
-          "operation": "export/url",
-          "input": [
-            "convert-1"
-          ]
+        "tasks": {
+            "import-1": {
+                "operation": "import/upload"
+            },
+            "convert-1": {
+                "operation": "convert",
+                "input": "import-1",
+                "input_format": "mp4",
+                "output_format": "mp3",
+                "options": {
+                    "video_audio_remove": false,
+                    "cut_start": cutStartFormatted,
+                    "cut_end": cutEndFormatted
+                }
+            },
+            "export-1": {
+                "operation": "export/url",
+                "input": ["convert-1"]
+            }
         }
-      }
     };
 
     promises.push(processFile(inputBody, req.file, i + 1, cutStart, cutEnd, transcriptionResults));
-  }
+}
 
   Promise.all(promises)
     .then(() => {
@@ -80,6 +78,13 @@ app.post('/upload', upload, (req, res) => {
       res.status(500).send('An error occurred during file conversion.');
     });
 });
+
+function formatTime(seconds) {
+  const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+  const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  return `${hrs}:${mins}:${secs}`;
+}
 
 async function processFile(inputBody, file, index, cutStart, cutEnd, transcriptionResults) {
   const headers = {
@@ -104,7 +109,7 @@ async function processFile(inputBody, file, index, cutStart, cutEnd, transcripti
     const uploadUrl = importTask.result.form.url;
     const uploadParams = importTask.result.form.parameters;
 
-    // Step 2: Upload the file
+    // Step 2: Upload the file from my device
     const formData = new FormData();
     for (const key in uploadParams) {
       formData.append(key, uploadParams[key]);
@@ -120,7 +125,7 @@ async function processFile(inputBody, file, index, cutStart, cutEnd, transcripti
     let jobStatus = 'processing';
     let downloadUrl;
     while (jobStatus === 'processing') {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds to wait the process
       const statusResponse = await axios.get(`https://api.freeconvert.com/v1/process/jobs/${jobId}`, { headers });
       jobStatus = statusResponse.data.status;
       console.log(`Job status: ${jobStatus}`);
