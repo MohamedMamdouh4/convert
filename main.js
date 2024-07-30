@@ -171,6 +171,29 @@ async function processFile(inputBody, file, index, cutStart, cutEnd, transcripti
   }
 }
 
+const recapContent = async (myContent) => {
+  try {
+      const prompt = `write a recap of this ${myContent} 
+            write it in detail, giving me a scence by scene explation of this part `;
+      const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+              { role: "user", content: prompt },
+          ]
+      });
+
+      const result = completion.choices[0].message.content.trim();
+      const [title, ...newContent] = result.split('\n');
+      return {
+          title: title.replace("Title: ", "").trim(),
+          content: newContent.join(' ').trim()
+      };
+  } catch (error) {
+      console.error("Error generating recap:", error);
+      throw error;
+  }
+};
+
 async function transcribeFile(filePath) {
   try {
     const transcription = await openai.audio.transcriptions.create({
@@ -180,7 +203,8 @@ async function transcribeFile(filePath) {
     });
 
     console.log("Transcription result:", transcription);
-    return transcription;
+    const generatedScript = await recapContent(transcription);
+    return generatedScript;
   } catch (error) {
     console.error("Error during transcription:", error);
     throw new Error('An error occurred during transcription.');
